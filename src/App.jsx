@@ -221,7 +221,8 @@ function App() {
     }
   }
   async function nextRound() {
-    setStudents(await invoke('next_round', {contents: students()}));
+    randomize();
+    pair();
   }
   async function pair() {
     setStudents(await invoke('pair_students', {contents: students()}));

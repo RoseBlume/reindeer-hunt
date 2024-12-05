@@ -141,17 +141,13 @@ pub fn coin_toss(contents: serde_json::Value) -> serde_json::Value {
             let first_name = student["firstName"].as_str().unwrap();
             let last_name = student["lastName"].as_str().unwrap();
             let room = student["room"].as_str().unwrap();
-            let pair_first = student["pairFirst"].as_str().unwrap();
-            let pair_last = student["pairLast"].as_str().unwrap();
-            let pair_room = student["pairRoom"].as_str().unwrap();
+            
 
             let toss: bool = rng.gen();
             if toss {
                 students = win(serde_json::Value::Array(students.clone()), first_name, last_name, room).as_array().unwrap().clone();
-                students = loss(serde_json::Value::Array(students.clone()), pair_first, pair_last, pair_room).as_array().unwrap().clone();
             } else {
                 students = loss(serde_json::Value::Array(students.clone()), first_name, last_name, room).as_array().unwrap().clone();
-                students = win(serde_json::Value::Array(students.clone()), pair_first, pair_last, pair_room).as_array().unwrap().clone();
             }
         }
     }

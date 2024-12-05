@@ -1,7 +1,8 @@
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::fs;
-use genpdf::{fonts, Element};
+use genpdf::{fonts, Element, Alignment};
+use genpdf::elements::{Paragraph, PageBreak, Break, PaddedElement, Text};
 use shellexpand;
 #[cfg(target_os = "linux")]
 const FONT_DIRS: &[&str] = &[
@@ -11,18 +12,16 @@ const FONT_DIRS: &[&str] = &[
 
 #[cfg(target_os = "windows")]
 const FONT_DIRS: &[&str] = &[
-    "C:\\Windows\\Fonts\\Liberation",
-    "C:\\Windows\\Fonts\\truetype\\Liberation",
+    "C:\\Windows\\Fonts",
 ];
 const DEFAULT_FONT_NAME: &'static str = "LiberationSans";
-const MONO_FONT_NAME: &'static str = "LiberationMono";
 
 
 #[cfg(target_os = "linux")]
 const CONFIG_PATH: &str = "~/.local/reindeer-hunt/config.json";
 
 #[cfg(target_os = "windows")]
-const CONFIG_PATH: &str = "C:\\Users\\%USERNAME%\\AppData\\Local\\reindeer-hunt\\config.json";
+const CONFIG_PATH: &str = "C:\\Users\\James\\Documents\\reindeer-hunt\\config.json";
 
 #[tauri::command]
 pub fn save_times(contents: serde_json::Value) {
@@ -160,17 +159,16 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
     let default_font =
         fonts::from_files(font_dir, DEFAULT_FONT_NAME, Some(fonts::Builtin::Helvetica))
             .expect("Failed to load the default font family");
-    let monospace_font = fonts::from_files(font_dir, MONO_FONT_NAME, Some(fonts::Builtin::Courier))
-        .expect("Failed to load the monospace font family");
 
     let mut doc = genpdf::Document::new(default_font);
     // Create a document and set the default font family
     // Change the default settings
     doc.set_title("Reindeer Hunt Permits");
+    #[cfg(target_os = "linux")]
     doc.set_paper_size(genpdf::PaperSize::Letter);
     // Customize the pages
     let mut decorator = genpdf::SimplePageDecorator::new();
-    decorator.set_margins(10);
+    decorator.set_margins(60);
     doc.set_page_decorator(decorator);
     // Add one or more elements
     // Render the document and write it to a file
@@ -192,12 +190,29 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
     });
 
     let mut current_room = String::new();
+    let mut student_count = 0;
     for student in students {
         let room = student["room"].as_str().unwrap().to_string();
         if room != current_room {
             current_room = room.clone();
             let header = format!("Homeroom: {}", current_room);
+            let texter = PageBreak::new();
+            let texten = Break::new(1);
+            doc.push(texter);
             doc.push(genpdf::elements::Paragraph::new(header).styled(genpdf::style::Style::new().bold()));
+            doc.push(texten);
+            student_count = 0;
+        }
+        if student_count > 0 && student_count % 5 == 0 {
+            doc.push(PageBreak::new());
+        }
+        student_count += 1;
+
+        let room = student["room"].as_str().unwrap().to_string();
+        if room != current_room {
+            current_room = room.clone();
+            let header = format!("Homeroom: {}", current_room);
+            doc.push(genpdf::elements::Paragraph::new(header));
         }
         let text = format!(
             "This permit gives you {}, {} of homeroom {}, permission to hunt {}, {} of homeroom {}, between the hours of {}-{}, {}-{}, and {}-{}",
@@ -214,9 +229,8 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
             evening_time_vec[0],
             evening_time_vec[1]
         );
-        doc.push(genpdf::elements::Paragraph::new(""));
         doc.push(genpdf::elements::Paragraph::new(text));
-        doc.push(genpdf::elements::Paragraph::new(""));
+        doc.push(Break::new(1));
     }
 
     doc.render_to_file(path).expect("Failed to write PDF file");
