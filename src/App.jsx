@@ -139,6 +139,9 @@ function App() {
       setPath(res)
     }
   }
+  async function removeLost() {
+    setStudents(await invoke("remove_lost", {contents: students()}));
+  }
   async function studentWin() {
     setStudents(await invoke("win", {
       name: name1(),
@@ -222,6 +225,7 @@ function App() {
   }
   async function nextRound() {
     randomize();
+    setStudents(await invoke("remove_lost", {contents: students()}));
     pair();
   }
   async function pair() {
@@ -402,13 +406,13 @@ function App() {
           <h3>
           <Switch fallback={<button onClick={incrementButtonState()}>Unknown</button>}>
             <Match when={buttonState() === 1}>
-              <div onClick={() => { incrementButtonState(); }}>Result: Undecided</div>
+              <div onClick={() => { incrementButtonState(); }}>Result: <div class="save" >Undecided</div></div>
             </Match>
             <Match when={buttonState() === 2}>
-              <div onClick={() => { incrementButtonState(); }}>Result: Won</div>
+              <div onClick={() => { incrementButtonState(); }}>Result: <div class="save" >Won</div></div>
             </Match>
             <Match when={buttonState() === 3}>
-              <div onClick={() => { incrementButtonState(); }}>Result: Lost</div>
+              <div onClick={() => { incrementButtonState(); }}>Result: <div class="save" >Lost</div></div>
             </Match>
             </Switch>
             </h3>
@@ -456,6 +460,7 @@ function App() {
                 </div>
                 <button type="submit">Save Hunt Times</button>
               </form>
+              <button onClick={() => setViewMode("main")}>Cancel</button>
             </div>
           </Match>
           <Match when={viewMode() === "PlayerEdit"}>

@@ -26,6 +26,7 @@ pub fn run() {
             manager::reset_status,
             manager::update_notes,
             manager::add_student,
+            manager::remove_lost,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

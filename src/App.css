@@ -91,6 +91,7 @@ button.active {
   border: 1px solid black;
   max-width: fit-content;
   margin-left: 1%;
+  display:inline;
 }
 #bott {
   margin-top:1vh;

@@ -16,6 +16,19 @@ pub fn remove_student(
     });
     serde_json::Value::Array(students)
 }
+#[command]
+pub fn remove_lost(contents: serde_json::Value) ->  serde_json::Value {
+    let mut students = contents.as_array().unwrap().clone();
+    students.retain(|student| student["win"] == "win");
+    for student in &mut students {
+        student["pairFirst"] = serde_json::Value::String("".to_string());
+        student["pairLast"] = serde_json::Value::String("".to_string());
+        student["pairRoom"] = serde_json::Value::String("".to_string());
+        student["win"] = serde_json::Value::String("undecided".to_string());
+        student["pending"] = serde_json::Value::Bool(true);
+    }
+    serde_json::Value::Array(students)
+}
 
 #[command]
 pub fn loss(
