@@ -15,6 +15,8 @@ pub fn run() {
             filemanager::save_times,
             filemanager::open_times,
             filemanager::generate_permits,
+            filemanager::save_cache,
+            filemanager::open_cache,
             manager::remove_student,
             manager::loss,
             manager::win,
@@ -27,6 +29,7 @@ pub fn run() {
             manager::update_notes,
             manager::add_student,
             manager::remove_lost,
+            manager::end_program,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -88,6 +88,10 @@ function App() {
   };
   // Show Variables
   const [coin, setCoin] = createSignal(true);
+  async function quit() {
+    await invoke("save_cache", { contents: students() });
+    await invoke("end_program");
+  }
   function incrementButtonState() {
     setButtonState(prev => {
       const newState = prev + 1;
@@ -101,6 +105,13 @@ function App() {
   async function saveTimes() {
     setHuntTimes(await invoke("save_times", { contents: huntTimes() }));
   }
+  async function open_cache() {
+    setStudents(await invoke("open_cache"))
+  }
+  open_cache();
+  async function save_cache() {
+    await invoke("save_cache", {contents: students()});
+  }
   async function addStudent() {
     setStudents(await invoke("add_student", {
       firstName: name1(),
@@ -109,6 +120,7 @@ function App() {
       notes: notes(),
       contents: students()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function saveStudent() {
     setStudents(await invoke("update_notes", {
@@ -128,8 +140,10 @@ function App() {
     else {
       studentLoss();
     }
+    await invoke("save_cache", {contents: students()});
   }
   async function openDia() {
+    await invoke("save_cache", {contents: students()});
     const res = await open({
       multiple: false,
       directory: false,
@@ -140,6 +154,7 @@ function App() {
     }
   }
   async function removeLost() {
+    await invoke("save_cache", {contents: students()});
     setStudents(await invoke("remove_lost", {contents: students()}));
   }
   async function studentWin() {
@@ -149,6 +164,7 @@ function App() {
       homeRoom: homeroom1(),
       content: students()
     }));
+    await invoke("save_cache", {contents: students()});
   }
 
   async function studentLoss() {
@@ -158,6 +174,7 @@ function App() {
       homeRoom: homeroom1(),
       content: students()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function resetStatus() {
     setStudents(await invoke("reset_status", {
@@ -166,6 +183,7 @@ function App() {
       homeRoom: homeroom1(),
       contents: students()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function importDia() {
     const res = await open({
@@ -181,9 +199,11 @@ function App() {
     setStudents(await invoke("import", {
       path: path1()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function sortStudents() {
     setStudents(await invoke("sort_students", {contents: students()}))
+    await invoke("save_cache", {contents: students()});
   }
 
   async function removeStudent() {
@@ -193,6 +213,7 @@ function App() {
       homeRoom: homeroom1(),
       contents: students()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function OpenJSON() {
     const res = await open({
@@ -204,10 +225,12 @@ function App() {
       setPath(res)
     }
     setStudents(await invoke('open', {path: path()}))
+    await invoke("save_cache", {contents: students()});
   }
 
 
   async function savehunts() {
+    await invoke("save_cache", {contents: students()});
     const pathos = await save({
       filters: [
         {
@@ -227,10 +250,12 @@ function App() {
     randomize();
     setStudents(await invoke("remove_lost", {contents: students()}));
     pair();
+    await invoke("save_cache", {contents: students()});
   }
   async function pair() {
     setStudents(await invoke('pair_students', {contents: students()}));
     sortStudents();
+    await invoke("save_cache", {contents: students()});
   }
   async function singleToss() {
     setStudents(await invoke('single_toss', {
@@ -239,6 +264,7 @@ function App() {
       lastName1: surname1(),
       homeRoom1: homeroom1()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function updateNotes() {
     setStudents(await invoke("update_notes", {
@@ -248,12 +274,15 @@ function App() {
       newNotes: notes(),
       contents: students()
     }));
+    await invoke("save_cache", {contents: students()});
   }
   async function randomize() {
     setStudents(await invoke("coin_toss", { contents: students() }));
+    await invoke("save_cache", {contents: students()});
   }
 
   async function genpermits() {
+    await invoke("save_cache", {contents: students()});
     const pathos = await save({
       filters: [
         {
@@ -281,12 +310,10 @@ function App() {
                 <ul class="dropmenu">
                   <li class="droplist" onClick={importDia}>Import Players</li>
                   <li class="droplist" onClick={OpenJSON}>Open</li>
-                  <li class="droplist" onClick={() => setViewMode("PlayerAdd")}>Add Player</li>
                   <li class="droplist" onClick={nextRound}>Next Round</li>
                   <li class="droplist" onClick={genpermits}>Create Permits</li>
                   <li class="droplist" onClick={savehunts}>Save Hunts</li>
-                  <li class="droplist" onClick={pair}>Pair Students</li>
-                  <li class="droplist">Quit</li>
+                  <li class="droplist" onClick={quit}>Quit</li>
                 </ul>
               </div>
             </div>
@@ -296,6 +323,7 @@ function App() {
               <button class="dropbtn">Player</button>
               <div class="dropdown-content">
                 <ul class="dropmenu">
+                <li class="droplist" onClick={pair}>Pair Players</li>
                   <li class="droplist" onClick={() => {
                     if (name1() != "") {
                       setViewMode("PlayerEdit")
@@ -303,6 +331,7 @@ function App() {
                   }}>Edit Player</li>
                   
                   <li class="droplist" onClick={removeStudent}>Remove Player</li>
+                  <li class="droplist" onClick={() => setViewMode("PlayerAdd")}>Add Player</li>
                 </ul>
               </div>
             </div>

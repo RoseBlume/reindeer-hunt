@@ -2,7 +2,9 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::fs;
 use genpdf::{fonts, Element, Alignment};
-use genpdf::elements::{Paragraph, PageBreak, Break, PaddedElement, Text};
+use genpdf::elements::{Paragraph, PageBreak, Break};
+use genpdf::style::Style;
+use whoami;
 use shellexpand;
 #[cfg(target_os = "linux")]
 const FONT_DIRS: &[&str] = &[
@@ -17,20 +19,34 @@ const FONT_DIRS: &[&str] = &[
 const DEFAULT_FONT_NAME: &'static str = "LiberationSans";
 
 
-#[cfg(target_os = "linux")]
-const CONFIG_PATH: &str = "~/.local/reindeer-hunt/config.json";
-
 #[cfg(target_os = "windows")]
-const CONFIG_PATH: &str = "C:\\Users\\James\\Documents\\reindeer-hunt\\config.json";
+fn get_cache_path() -> String{
+    format!("C:\\Users\\{}\\AppData\\Roaming\\reindeer-hunt\\cache.json", whoami::username().to_string())
+}
+#[cfg(target_os = "windows")]
+fn get_config_path() -> String{
+    format!("C:\\Users\\{}\\AppData\\Roaming\\reindeer-hunt\\config.json", whoami::username().to_string())
+}
+#[cfg(target_os = "linux")]
+fn get_cache_path() -> String{
+    format!("/home/{}/.local/reindeer-hunt/cache.json", whoami::username().to_string())
+}
+#[cfg(target_os = "linux")]
+fn get_config_path() -> String{
+    format!("/home/{}/.local/reindeer-hunt/config.json", whoami::username().to_string())
+}
+
 
 #[tauri::command]
 pub fn save_times(contents: serde_json::Value) {
-    let config_path = shellexpand::tilde(CONFIG_PATH).to_string();
+    let CONFIG_PATH = get_config_path();
+    let config_path = shellexpand::tilde(&CONFIG_PATH).to_string();
     save(&config_path, contents.clone());
 }
 #[tauri::command]
 pub fn open_times() -> serde_json::Value {
-    let config_path = shellexpand::tilde(CONFIG_PATH).to_string();
+    let CONFIG_PATH = get_config_path();
+    let config_path = shellexpand::tilde(&CONFIG_PATH).to_string();
     let config_dir = std::path::Path::new(&config_path).parent().unwrap();
     let default_times = serde_json::json!([
         {
@@ -110,6 +126,47 @@ pub fn open(path: &str) -> serde_json::Value {
     let contents = fs::read_to_string(path).expect("Unable to read file");
     serde_json::from_str(&contents).expect("Unable to parse JSON")
 }
+#[tauri::command]
+pub fn save_cache(contents: serde_json::Value) {
+    let CACHE_PATH = get_cache_path();
+    let config_path = shellexpand::tilde(&CACHE_PATH).to_string();
+    save(&config_path, contents.clone());
+}
+#[tauri::command]
+pub fn open_cache() -> serde_json::Value {
+    let CACHE_PATH = get_cache_path();
+    let config_path = shellexpand::tilde(&CACHE_PATH).to_string();
+    let config_dir = std::path::Path::new(&config_path).parent().unwrap();
+    
+    let default_students = serde_json::json!([
+        {
+            // Students name
+            "firstName": "",
+            "lastName": "",
+            // The home room number or spare
+            "room": "",
+            "rand": 0,
+            "win": "",
+            "notes": "",
+            "pending": true,
+            // The name of the opposing student
+            "pairFirst": "",
+            "pairLast": "",
+            "pairRoom": ""
+        }
+    ]);
+    if !config_dir.exists() {
+        fs::create_dir_all(config_dir).expect("Unable to create config directory");
+    }
+
+    if !std::path::Path::new(&config_path).exists() {
+        save(&config_path, default_students.clone());
+        default_students
+    }
+    else {
+        open(&config_path)
+    }
+}
 
 fn sort_students(contents: serde_json::Value) -> serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
@@ -168,7 +225,7 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
     doc.set_paper_size(genpdf::PaperSize::Letter);
     // Customize the pages
     let mut decorator = genpdf::SimplePageDecorator::new();
-    decorator.set_margins(60);
+    decorator.set_margins(10);
     doc.set_page_decorator(decorator);
     // Add one or more elements
     // Render the document and write it to a file
@@ -188,9 +245,9 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
             room_cmp
         }
     });
-
     let mut current_room = String::new();
     let mut student_count = 0;
+    doc.set_minimal_conformance();
     for student in students {
         let room = student["room"].as_str().unwrap().to_string();
         if room != current_room {
@@ -203,7 +260,7 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
             doc.push(texten);
             student_count = 0;
         }
-        if student_count > 0 && student_count % 5 == 0 {
+        if student_count > 0 && student_count % 11 == 0 {
             doc.push(PageBreak::new());
         }
         student_count += 1;
@@ -215,21 +272,50 @@ pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_js
             doc.push(genpdf::elements::Paragraph::new(header));
         }
         let text = format!(
-            "This permit gives you {}, {} of homeroom {}, permission to hunt {}, {} of homeroom {}, between the hours of {}-{}, {}-{}, and {}-{}",
+            "This permit gives you {}, {} of homeroom {},",
             student["firstName"].as_str().unwrap(),
             student["lastName"].as_str().unwrap(),
             student["room"].as_str().unwrap(),
+        );
+        let text2 = format!(
+            "permission to hunt {}, {} of homeroom {},",
             student["pairFirst"].as_str().unwrap(),
             student["pairLast"].as_str().unwrap(),
             student["pairRoom"].as_str().unwrap(),
+        );
+        let text3 = format!(
+            "between the hours of {}-{}, {}-{}, and ",
             morning_time_vec[0],
             morning_time_vec[1],
             lunch_time_vec[0],
             lunch_time_vec[1],
+        );
+        let text4 = format!(
+            "{}-{}",
             evening_time_vec[0],
             evening_time_vec[1]
         );
-        doc.push(genpdf::elements::Paragraph::new(text));
+//        doc.push(genpdf::elements::Paragraph::new(text).aligned(Alignment::Center));
+        doc.push(
+            Paragraph::new(text)
+                .aligned(Alignment::Left)
+                .styled(Style::new().with_font_size(11)),
+        );
+        doc.push(
+            Paragraph::new(text2)
+                .aligned(Alignment::Left)
+                .styled(Style::new().with_font_size(11)),
+        );
+        doc.push(
+            Paragraph::new(text3)
+                .aligned(Alignment::Left)
+                .styled(Style::new().with_font_size(11)),
+        );
+        doc.push(
+            Paragraph::new(text4)
+                .aligned(Alignment::Left)
+                .styled(Style::new().with_font_size(11)),
+        );
         doc.push(Break::new(1));
     }
 

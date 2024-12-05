@@ -284,3 +284,8 @@ pub fn update_notes(
 
     serde_json::Value::Array(students)
 }
+
+#[command]
+pub fn end_program() {
+    std::process::exit(0);
+}
