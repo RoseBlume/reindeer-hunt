@@ -45,6 +45,22 @@ header {
 
 .dropdown:hover .dropbtn {background-color: #3e8e41;}
 
+#Help:hover, #Quit:hover {
+  background-color: #3e8e41;
+}
+#Help, #Quit {
+  background-color: #eeeeee;
+  color: rgb(0, 0, 0);
+  padding: 0 16px;
+  font-size: 16px;
+  border: none;
+  display: inline-block;
+}
+
+#Quit {
+  float: right;
+}
+
 .dropmenu {
   list-style-type: none;
   padding: 0;
@@ -74,8 +90,10 @@ button.active {
   float: right;
   width: 70%;
   height:70vh;
+  overflow-y: scroll;
 }
 #studentlist {
+  margin-top:1px;
   height:90vh;
   overflow-y: scroll;
   width: 29%;

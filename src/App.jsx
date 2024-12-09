@@ -24,7 +24,7 @@ const [editTimes, setEditTimes] = createSignal(false);
 const [coinMessage, setCoinMessage] = createSignal("");
 const [saver, setSaver] = createSignal("");
 const [selected, setSelected] = createSignal("");
-// Can be values main, PlayerEdit, TimesEdit, PlayerAdd
+// Can be values main, PlayerEdit, TimesEdit, PlayerAdd, Help
 const [viewMode, setViewMode] = createSignal("main");
 const [moddedName, setModdedName] = createSignal("");
 const [moddedSurname, setModdedSurname] = createSignal("");
@@ -86,8 +86,6 @@ function App() {
       setButtonState(1);
     }
   };
-  // Show Variables
-  const [coin, setCoin] = createSignal(true);
   async function quit() {
     await invoke("save_cache", { contents: students() });
     await invoke("end_program");
@@ -109,9 +107,6 @@ function App() {
     setStudents(await invoke("open_cache"))
   }
   open_cache();
-  async function save_cache() {
-    await invoke("save_cache", {contents: students()});
-  }
   async function addStudent() {
     setStudents(await invoke("add_student", {
       firstName: name1(),
@@ -349,7 +344,8 @@ function App() {
           </li>
         </ul>
       </header>
-      <button id="menu" onClick={openDia}>Open File</button>
+      <div id="Help" onClick={() => setViewMode("Help")}>Help</div>
+      <div id="Quit" onClick={quit}>Quit</div>
       <ul id="Men">
         <li id="studentlist" class="MenArea">
       <table>
@@ -363,6 +359,7 @@ function App() {
         <Index each={students().filter(deer => deer.win === "undecided")}>{(deer, i) =>
           <tr class="students" onClick={
             () => {
+              setViewMode("main")
               setNotes(deer().notes)
               setSurname1(deer().lastName)
               setName1(deer().firstName)
@@ -384,6 +381,7 @@ function App() {
         <Index each={students().filter(deer => deer.win === "win")}>{(deer, i) =>
           <tr class="students" onClick={
             () => {
+              setViewMode("main")
               setNotes(deer().notes)
               setSurname1(deer().lastName)
               setName1(deer().firstName)
@@ -405,6 +403,7 @@ function App() {
         <Index each={students().filter(deer => deer.win === "loss")}>{(deer, i) =>
           <tr class="students" onClick={
             () => {
+              setViewMode("main")
               setNotes(deer().notes)
               setSurname1(deer().lastName)
               setName1(deer().firstName)
@@ -557,6 +556,28 @@ function App() {
               </form>
               <button onClick={() => setViewMode("main")}>Cancel</button>
             </div>
+          </Match>
+          <Match when={viewMode() === "Help"}>
+            <h2>Help</h2>
+            <p>Click on a student in the list to view their information.</p>
+            <p>Click the "Edit Player" button to change a student's information.</p>
+            <p>Click the "Add Player" button to add a new student.</p>
+            <p>Click the "Remove Player" button to remove a student.</p>
+            <p>Click the "Save Player Changes" button to save changes to a student.</p>
+            <p>Click the "Coin Toss" button to randomly decide the winner of a pending match.</p>
+            <p>Click the "Save Hunt Times" button to save the hunt times.</p>
+            <p>Click the "Edit Hunt Times" button to edit the hunt times.</p>
+            <p>Click the "Randomize Pending Matches" button to randomly pair undecided students.</p>
+            <p>Click the "Next Round" button to pair students for the next round.</p>
+            <p>Click the "Create Permits" button to generate hunting permits.</p>
+            <p>Click the "Quit" button to exit the program.</p>
+            <h3>How to start a new round.</h3>
+            <ol>
+              <li>Save your Matches to allow for you to rollback later on.</li>
+              <li>Randomize the pending matches</li>
+              <li>Click Next Round</li>
+            </ol>
+            <button onClick={() => setViewMode("main")}>Close</button>
           </Match>
           </Switch>
           

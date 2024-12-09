@@ -18,7 +18,7 @@ const FONT_DIRS: &[&str] = &[
 ];
 const DEFAULT_FONT_NAME: &'static str = "LiberationSans";
 
-
+// Paths for windows
 #[cfg(target_os = "windows")]
 fn get_cache_path() -> String{
     format!("C:\\Users\\{}\\AppData\\Roaming\\reindeer-hunt\\cache.json", whoami::username().to_string())
@@ -27,6 +27,8 @@ fn get_cache_path() -> String{
 fn get_config_path() -> String{
     format!("C:\\Users\\{}\\AppData\\Roaming\\reindeer-hunt\\config.json", whoami::username().to_string())
 }
+
+// Paths for Linux
 #[cfg(target_os = "linux")]
 fn get_cache_path() -> String{
     format!("/home/{}/.local/reindeer-hunt/cache.json", whoami::username().to_string())
@@ -39,14 +41,15 @@ fn get_config_path() -> String{
 
 #[tauri::command]
 pub fn save_times(contents: serde_json::Value) {
-    let CONFIG_PATH = get_config_path();
-    let config_path = shellexpand::tilde(&CONFIG_PATH).to_string();
+    let config_path = get_config_path();
+    let config_path = shellexpand::tilde(&config_path).to_string();
     save(&config_path, contents.clone());
 }
+// This command runs on startup and returns the json code from the config file. If the file does not exist, it creates it and sets the default times.
 #[tauri::command]
 pub fn open_times() -> serde_json::Value {
-    let CONFIG_PATH = get_config_path();
-    let config_path = shellexpand::tilde(&CONFIG_PATH).to_string();
+    let config_path = get_config_path();
+    let config_path = shellexpand::tilde(&config_path).to_string();
     let config_dir = std::path::Path::new(&config_path).parent().unwrap();
     let default_times = serde_json::json!([
         {
@@ -75,7 +78,7 @@ pub fn open_times() -> serde_json::Value {
     }
 }
 
-
+// This command imports a csv file and returns the json code for the students.
 #[tauri::command]
 pub fn import(path: &str) -> serde_json::Value {
     let file = File::open(path).expect("Unable to open file");
@@ -108,6 +111,7 @@ pub fn import(path: &str) -> serde_json::Value {
     sort_students(serde_json::Value::Array(students))
 }
 
+// This command saves the json code to a file.
 #[tauri::command]
 pub fn save(path: &str, data_info: serde_json::Value) {
     let mut file = OpenOptions::new()
@@ -121,21 +125,25 @@ pub fn save(path: &str, data_info: serde_json::Value) {
     file.write_all(data.as_bytes())
         .expect("Unable to write data to file");
 }
+// This command opens a file and returns the json code.
 #[tauri::command]
 pub fn open(path: &str) -> serde_json::Value {
     let contents = fs::read_to_string(path).expect("Unable to read file");
     serde_json::from_str(&contents).expect("Unable to parse JSON")
 }
+// This command saves the json code to a file.
 #[tauri::command]
 pub fn save_cache(contents: serde_json::Value) {
-    let CACHE_PATH = get_cache_path();
-    let config_path = shellexpand::tilde(&CACHE_PATH).to_string();
+    let cache_path = get_cache_path();
+    let config_path = shellexpand::tilde(&cache_path).to_string();
     save(&config_path, contents.clone());
 }
+
+// This command runs on startup and returns the json code from the cache file. If the file does not exist, it creates it and sets the default students.
 #[tauri::command]
 pub fn open_cache() -> serde_json::Value {
-    let CACHE_PATH = get_cache_path();
-    let config_path = shellexpand::tilde(&CACHE_PATH).to_string();
+    let cache_path = get_cache_path();
+    let config_path = shellexpand::tilde(&cache_path).to_string();
     let config_dir = std::path::Path::new(&config_path).parent().unwrap();
     
     let default_students = serde_json::json!([
@@ -168,6 +176,7 @@ pub fn open_cache() -> serde_json::Value {
     }
 }
 
+// This command sorts the students by room number, last name, and first name.
 fn sort_students(contents: serde_json::Value) -> serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
 
@@ -188,7 +197,7 @@ fn sort_students(contents: serde_json::Value) -> serde_json::Value {
     serde_json::Value::Array(students)
 }
 
-
+// This command generates the permits for the students and saves them to a pdf file.
 #[tauri::command]
 pub fn generate_permits(contents: serde_json::Value, path: &str, times: serde_json::Value) {
     let times_array = times.as_array().expect("Times should be an array");

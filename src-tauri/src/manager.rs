@@ -1,6 +1,8 @@
 use tauri::command;
 use rand::prelude::SliceRandom;
 use rand::Rng;
+
+// This command is used to remove a student from the list of students.
 #[command]
 pub fn remove_student(
     contents: serde_json::Value,
@@ -16,6 +18,7 @@ pub fn remove_student(
     });
     serde_json::Value::Array(students)
 }
+// This command removes all students that have lost from the list of students.
 #[command]
 pub fn remove_lost(contents: serde_json::Value) ->  serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
@@ -29,7 +32,7 @@ pub fn remove_lost(contents: serde_json::Value) ->  serde_json::Value {
     }
     serde_json::Value::Array(students)
 }
-
+// This command removes all students that have won from the list of students.
 #[command]
 pub fn loss(
     content: serde_json::Value,
@@ -58,7 +61,7 @@ pub fn loss(
 
     serde_json::Value::Array(students)
 }
-
+// This command removes all students that have lost from the list of students.
 #[command]
 pub fn win(
     content: serde_json::Value,
@@ -87,6 +90,7 @@ pub fn win(
 
     serde_json::Value::Array(students)
 }
+// This command resets the status of a student to pending and undecided.
 #[command]
 pub fn reset_status(
     contents: serde_json::Value,
@@ -110,7 +114,7 @@ pub fn reset_status(
 }
 
 
-
+// This command pairs students together.
 #[command]
 pub fn pair_students(contents: serde_json::Value) -> serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
@@ -143,7 +147,7 @@ pub fn pair_students(contents: serde_json::Value) -> serde_json::Value {
 
     serde_json::Value::Array(paired_students)
 }
-
+// This command performs a coin toss on all students.
 #[command]
 pub fn coin_toss(contents: serde_json::Value) -> serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
@@ -167,7 +171,7 @@ pub fn coin_toss(contents: serde_json::Value) -> serde_json::Value {
 
     serde_json::Value::Array(students)
 }
-
+// This command performs a single coin toss on a student.
 #[command]
 pub fn single_toss(
     contents: serde_json::Value,
@@ -187,7 +191,7 @@ pub fn single_toss(
 
     serde_json::Value::Array(students)
 }
-
+// This command starts the next round
 #[command]
 pub fn next_round(contents: serde_json::Value) -> serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
@@ -214,7 +218,7 @@ pub fn next_round(contents: serde_json::Value) -> serde_json::Value {
 
     serde_json::Value::Array(students)
 }
-
+// This command sorts the students by homeroom, last name, and then first name.
 #[command]
 pub fn sort_students(contents: serde_json::Value) -> serde_json::Value {
     let mut students = contents.as_array().unwrap().clone();
@@ -235,6 +239,7 @@ pub fn sort_students(contents: serde_json::Value) -> serde_json::Value {
 
     serde_json::Value::Array(students)
 }
+// This command adds a student to the list of students.
 #[command]
 pub fn add_student(
     contents: serde_json::Value,
@@ -262,7 +267,7 @@ pub fn add_student(
     // Sort students before returning
     sort_students(serde_json::Value::Array(students))
 }
-
+// This command updates the notes of a student.
 #[command]
 pub fn update_notes(
     contents: serde_json::Value,
@@ -284,7 +289,7 @@ pub fn update_notes(
 
     serde_json::Value::Array(students)
 }
-
+// This command ends the program.
 #[command]
 pub fn end_program() {
     std::process::exit(0);
